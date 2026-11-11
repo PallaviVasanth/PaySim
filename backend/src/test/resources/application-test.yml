@@ -1,0 +1,17 @@
+# Test-only credentials. Database connection is injected by Testcontainers.
+spring:
+  datasource:
+    password: test
+paysim:
+  cors:
+    allowed-origins: http://localhost:5173
+  security:
+    operator-username: operator
+    operator-password: operator-test-pass
+    viewer-username: viewer
+    viewer-password: viewer-test-pass
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

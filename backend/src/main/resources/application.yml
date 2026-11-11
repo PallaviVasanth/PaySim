@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: paysim
+  datasource:
+    url: ${PAYSIM_DB_URL:jdbc:postgresql://localhost:5432/paysim}
+    username: ${PAYSIM_DB_USER:paysim}
+    password: ${PAYSIM_DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate          # schema is owned by Flyway, Hibernate only verifies it
+  flyway:
+    enabled: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 8080
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-binding-errors: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    enabled: ${PAYSIM_SWAGGER_ENABLED:true}
+  swagger-ui:
+    enabled: ${PAYSIM_SWAGGER_ENABLED:true}
+
+paysim:
+  cors:
+    allowed-origins: ${PAYSIM_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
+  security:
+    operator-username: ${PAYSIM_OPERATOR_USERNAME:operator}
+    operator-password: ${PAYSIM_OPERATOR_PASSWORD}
+    viewer-username: ${PAYSIM_VIEWER_USERNAME:viewer}
+    viewer-password: ${PAYSIM_VIEWER_PASSWORD}

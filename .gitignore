@@ -1,0 +1,22 @@
+# Secrets
+.env
+*.pem
+
+# Backend
+backend/target/
+*.class
+*.log
+.mvn/wrapper/maven-wrapper.jar
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/*.tsbuildinfo
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
