@@ -1,3 +1,4 @@
+
 import { Plus, SearchX } from 'lucide-react';
 import { useState } from 'react';
 import { listPayments } from '../api/payments';
@@ -15,7 +16,7 @@ import { useApi } from '../hooks/useApi';
 import { useDebounce } from '../hooks/useDebounce';
 
 export function TransactionsPage() {
-  const { canWrite } = useAuth();
+  const { user, canWrite } = useAuth();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<PaymentStatus | ''>('');
   const [sort, setSort] = useState<SortField>('createdAt');
@@ -27,13 +28,18 @@ export function TransactionsPage() {
 
   const debouncedSearch = useDebounce(search, 300);
   const query: PaymentQuery = { q: debouncedSearch, status, sort, direction, page, size };
-  const { data, error, loading, reload } = useApi(() => listPayments(query), [debouncedSearch, status, sort, direction, page, size]);
+
+  const { data, error, loading, reload } = useApi(
+    () => listPayments(query, Boolean(user)),
+    [debouncedSearch, status, sort, direction, page, size, user],
+  );
 
   const hasFilters = debouncedSearch.trim() !== '' || status !== '';
 
   function onSort(field: SortField) {
-    if (field === sort) setDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
-    else {
+    if (field === sort) {
+      setDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
       setSort(field);
       setDirection(field === 'createdAt' || field === 'amount' ? 'desc' : 'asc');
     }
@@ -55,6 +61,7 @@ export function TransactionsPage() {
             setPage(0);
           }}
         />
+
         {canWrite && (
           <button type="button" className="btn btn--primary" onClick={() => setCreating(true)}>
             <Plus size={16} aria-hidden="true" /> New payment
@@ -73,13 +80,26 @@ export function TransactionsPage() {
                 Could not refresh: {error.message}
               </p>
             )}
+
             {data.content.length === 0 ? (
               <EmptyState icon={<SearchX size={28} />} title={hasFilters ? 'No matching payments' : 'No payments yet'}>
-                {hasFilters ? 'Try a different search term or clear the status filter.' : canWrite ? 'Create a simulated payment to get started.' : 'Nothing to show yet.'}
+                {hasFilters
+                  ? 'Try a different search term or clear the status filter.'
+                  : canWrite
+                    ? 'Create a simulated payment to get started.'
+                    : 'Nothing to show yet.'}
               </EmptyState>
             ) : (
-              <TransactionTable payments={data.content} sort={sort} direction={direction} busy={loading} onSort={onSort} onOpen={setOpenId} />
+              <TransactionTable
+                payments={data.content}
+                sort={sort}
+                direction={direction}
+                busy={loading}
+                onSort={onSort}
+                onOpen={setOpenId}
+              />
             )}
+
             <Pagination
               page={data.page}
               size={data.size}
@@ -105,7 +125,14 @@ export function TransactionsPage() {
           }}
         />
       )}
-      {openId && <PaymentDetailDialog paymentId={openId} onClose={() => setOpenId(null)} onChanged={reload} />}
+
+      {openId && (
+        <PaymentDetailDialog
+          paymentId={openId}
+          onClose={() => setOpenId(null)}
+          onChanged={reload}
+        />
+      )}
     </div>
   );
 }

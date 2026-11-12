@@ -1,3 +1,4 @@
+
 import { Undo2 } from 'lucide-react';
 import { useState } from 'react';
 import { getPayment } from '../../api/payments';
@@ -13,15 +14,19 @@ import { RefundConfirmDialog } from './RefundConfirmDialog';
 interface Props {
   paymentId: string;
   onClose: () => void;
-  /** Called after any change so the parent can refresh its own lists and metrics. */
   onChanged: () => void;
 }
 
 export function PaymentDetailDialog({ paymentId, onClose, onChanged }: Props) {
-  const { canWrite } = useAuth();
-  const { data, error, loading, reload } = useApi(() => getPayment(paymentId), [paymentId]);
-  const [confirmingRefund, setConfirmingRefund] = useState(false);
+  const { user, canWrite } = useAuth();
+  const authenticated = Boolean(user);
 
+  const { data, error, loading, reload } = useApi(
+    () => getPayment(paymentId, authenticated),
+    [paymentId, authenticated],
+  );
+
+  const [confirmingRefund, setConfirmingRefund] = useState(false);
   const payment = data?.payment;
 
   return (
@@ -41,14 +46,21 @@ export function PaymentDetailDialog({ paymentId, onClose, onChanged }: Props) {
             <div><dt>Order reference</dt><dd>{payment.orderReference}</dd></div>
             <div><dt>Customer reference</dt><dd>{payment.customerReference}</dd></div>
             <div><dt>Created</dt><dd>{formatDateTime(payment.createdAt)}</dd></div>
+
             {payment.declineReason && (
               <div>
                 <dt>Decline reason</dt>
                 <dd>{DECLINE_REASON_LABEL[payment.declineReason] ?? payment.declineReason}</dd>
               </div>
             )}
-            {payment.refundedAt && <div><dt>Refunded</dt><dd>{formatDateTime(payment.refundedAt)}</dd></div>}
-            {payment.description && <div className="detail__wide"><dt>Description</dt><dd>{payment.description}</dd></div>}
+
+            {payment.refundedAt && (
+              <div><dt>Refunded</dt><dd>{formatDateTime(payment.refundedAt)}</dd></div>
+            )}
+
+            {payment.description && (
+              <div className="detail__wide"><dt>Description</dt><dd>{payment.description}</dd></div>
+            )}
           </dl>
 
           <section aria-labelledby="audit-heading">
@@ -58,7 +70,9 @@ export function PaymentDetailDialog({ paymentId, onClose, onChanged }: Props) {
                 <li key={event.id}>
                   <p>{event.message}</p>
                   <small>
-                    {event.previousStatus ? `${event.previousStatus} → ${event.newStatus}` : `Initial status ${event.newStatus}`}
+                    {event.previousStatus
+                      ? `${event.previousStatus} → ${event.newStatus}`
+                      : `Initial status ${event.newStatus}`}
                     {' · '}
                     <time dateTime={event.occurredAt}>{formatDateTime(event.occurredAt)}</time>
                   </small>
@@ -68,9 +82,16 @@ export function PaymentDetailDialog({ paymentId, onClose, onChanged }: Props) {
           </section>
 
           <footer className="modal__footer">
-            <button type="button" className="btn btn--ghost" onClick={onClose}>Close</button>
+            <button type="button" className="btn btn--ghost" onClick={onClose}>
+              Close
+            </button>
+
             {canWrite && payment.status === 'SUCCEEDED' && (
-              <button type="button" className="btn btn--danger" onClick={() => setConfirmingRefund(true)}>
+              <button
+                type="button"
+                className="btn btn--danger"
+                onClick={() => setConfirmingRefund(true)}
+              >
                 <Undo2 size={16} aria-hidden="true" /> Refund…
               </button>
             )}

@@ -1,24 +1,33 @@
-import { LogOut } from 'lucide-react';
+
+import { LogIn, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ThemeToggle } from './ThemeToggle';
 
 export function TopBar({ title }: { title: string }) {
   const { user, signOut } = useAuth();
+
   return (
     <header className="topbar">
       <h1>{title}</h1>
+
       <div className="topbar__tools">
         <ThemeToggle />
-        {user && (
+
+        {user ? (
           <div className="topbar__user">
             <span className="topbar__who">
               {user.username}
               <small>{user.roles.includes('OPERATOR') ? 'Operator' : 'Viewer, read-only'}</small>
             </span>
+
             <button type="button" className="btn btn--ghost" onClick={signOut}>
               <LogOut size={16} aria-hidden="true" /> Sign out
             </button>
           </div>
+        ) : (
+          <a className="btn btn--ghost" href="/#/login">
+            <LogIn size={16} aria-hidden="true" /> Operator sign in
+          </a>
         )}
       </div>
     </header>

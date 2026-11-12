@@ -1,3 +1,4 @@
+
 import { request } from './client';
 import type {
   CreatePaymentInput,
@@ -10,28 +11,52 @@ import type {
 } from './types';
 
 export async function login(): Promise<CurrentUser> {
-  const { data } = await request<CurrentUser>('/api/v1/me', { skipUnauthorizedHandler: true });
+  const { data } = await request<CurrentUser>('/api/v1/me', {
+    skipUnauthorizedHandler: true,
+  });
   return data;
 }
 
-export async function getSummary(): Promise<DashboardSummary> {
-  return (await request<DashboardSummary>('/api/v1/dashboard/summary')).data;
+export async function getSummary(authenticated = false): Promise<DashboardSummary> {
+  const endpoint = authenticated
+    ? '/api/v1/dashboard/summary'
+    : '/api/v1/demo/dashboard/summary';
+
+  return (await request<DashboardSummary>(endpoint)).data;
 }
 
-export async function listPayments(query: PaymentQuery): Promise<Paged<Payment>> {
+export async function listPayments(
+  query: PaymentQuery,
+  authenticated = false,
+): Promise<Paged<Payment>> {
   const params = new URLSearchParams({
     page: String(query.page),
     size: String(query.size),
     sort: query.sort,
     direction: query.direction,
   });
+
   if (query.q.trim()) params.set('q', query.q.trim());
   if (query.status) params.set('status', query.status);
-  return (await request<Paged<Payment>>(`/api/v1/payments?${params.toString()}`)).data;
+
+  const endpoint = authenticated
+    ? '/api/v1/payments'
+    : '/api/v1/demo/payments';
+
+  return (await request<Paged<Payment>>(`${endpoint}?${params.toString()}`)).data;
 }
 
-export async function getPayment(id: string): Promise<PaymentDetail> {
-  return (await request<PaymentDetail>(`/api/v1/payments/${encodeURIComponent(id)}`)).data;
+export async function getPayment(
+  id: string,
+  authenticated = false,
+): Promise<PaymentDetail> {
+  const endpoint = authenticated
+    ? '/api/v1/payments'
+    : '/api/v1/demo/payments';
+
+  return (
+    await request<PaymentDetail>(`${endpoint}/${encodeURIComponent(id)}`)
+  ).data;
 }
 
 export async function createPayment(
@@ -43,9 +68,18 @@ export async function createPayment(
     body: input,
     idempotencyKey,
   });
-  return { payment: data, replayed: headers.get('Idempotent-Replayed') === 'true' };
+
+  return {
+    payment: data,
+    replayed: headers.get('Idempotent-Replayed') === 'true',
+  };
 }
 
 export async function refundPayment(id: string): Promise<Payment> {
-  return (await request<Payment>(`/api/v1/payments/${encodeURIComponent(id)}/refund`, { method: 'POST' })).data;
+  return (
+    await request<Payment>(
+      `/api/v1/payments/${encodeURIComponent(id)}/refund`,
+      { method: 'POST' },
+    )
+  ).data;
 }

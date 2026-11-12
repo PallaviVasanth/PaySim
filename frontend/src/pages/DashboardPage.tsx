@@ -1,3 +1,4 @@
+
 import { Ban, CheckCircle2, Plus, ReceiptText, Undo2 } from 'lucide-react';
 import { useState } from 'react';
 import { getSummary } from '../api/payments';
@@ -13,8 +14,11 @@ import { useAuth } from '../context/AuthContext';
 import { useApi } from '../hooks/useApi';
 
 export function DashboardPage() {
-  const { canWrite } = useAuth();
-  const { data, error, loading, reload } = useApi(getSummary, []);
+  const { user, canWrite } = useAuth();
+  const { data, error, loading, reload } = useApi(
+    () => getSummary(Boolean(user)),
+    [user],
+  );
   const [creating, setCreating] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -53,7 +57,9 @@ export function DashboardPage() {
             <h2 id="activity-heading">Recent activity</h2>
             {data.recentActivity.length === 0 ? (
               <EmptyState icon={<ReceiptText size={28} />} title="No payments yet" action={newPaymentButton || undefined}>
-                {canWrite ? 'Create your first simulated payment to see activity here.' : 'Activity appears here once an operator creates a payment.'}
+                {canWrite
+                  ? 'Create your first simulated payment to see activity here.'
+                  : 'Activity appears here once an operator creates a payment.'}
               </EmptyState>
             ) : (
               <RecentActivityList items={data.recentActivity} onOpen={setOpenId} />
@@ -71,7 +77,14 @@ export function DashboardPage() {
           }}
         />
       )}
-      {openId && <PaymentDetailDialog paymentId={openId} onClose={() => setOpenId(null)} onChanged={reload} />}
+
+      {openId && (
+        <PaymentDetailDialog
+          paymentId={openId}
+          onClose={() => setOpenId(null)}
+          onChanged={reload}
+        />
+      )}
     </div>
   );
 }
