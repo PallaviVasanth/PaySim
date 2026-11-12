@@ -99,6 +99,9 @@ A full-stack **simulator** of a payment-processing service: create payments, see
 
 **Backend Health:** https://paysim-backend-b80w.onrender.com/actuator/health
 
+**Hosting:** Render  
+**Database:** PostgreSQL
+
 > The application is deployed on Render. The PostgreSQL database is hosted separately and is not publicly accessible through a browser link.
 
 ## Features
@@ -108,18 +111,77 @@ A full-stack **simulator** of a payment-processing service: create payments, see
 ## Project structure
 
 ```
-paysim/
-├── backend/                     Spring Boot service
-│   ├── src/main/java/com/paysim/{payment,audit,idempotency,dashboard,security,common,config}
-│   ├── src/main/resources/{application.yml,db/migration/V1__create_payment_schema.sql}
-│   ├── src/test/java/com/paysim/{payment,integration}
+PaySim/
+├── backend/                              Spring Boot backend
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/paysim/
+│   │   │   │   ├── payment/
+│   │   │   │   ├── audit/
+│   │   │   │   ├── idempotency/
+│   │   │   │   ├── dashboard/
+│   │   │   │   ├── security/
+│   │   │   │   ├── common/
+│   │   │   │   └── config/
+│   │   │   └── resources/
+│   │   │       └── db/
+│   │   │           ├── migration/
+│   │   │           │   └── V1__create_payment_schema.sql
+│   │   │           └── demo/
+│   │   │               └── demo_seed.sql
+│   │   └── test/
+│   │       └── java/com/paysim/
+│   │           ├── payment/
+│   │           └── integration/
 │   ├── Dockerfile
 │   └── pom.xml
-├── frontend/                    React + TypeScript (Vite)
-│   └── src/{api,components,context,hooks,pages,styles,utils}
-├── docs/{API.md,ARCHITECTURE.md}
-├── .github/workflows/ci.yml
-├── docker-compose.yml  .env.example  Makefile  .gitignore
+│
+├── frontend/                             React + TypeScript frontend
+│   ├── src/
+│   │   ├── api/                           API client
+│   │   ├── components/                    Reusable UI components
+│   │   ├── context/                       React context
+│   │   ├── hooks/                         Custom React hooks
+│   │   ├── pages/
+│   │   │   ├── DashboardPage.tsx
+│   │   │   └── TransactionsPage.tsx
+│   │   ├── styles/                        CSS and design tokens
+│   │   ├── utils/                         Utility functions
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   ├── package.json
+│   └── tsconfig.json
+│
+├── docs/
+│   ├── API.md
+│   └── ARCHITECTURE.md
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+│
+├── docker-compose.yml
+├── .env.example
+├── .gitignore
+├── Makefile
+└── README.md
+
+Demo Database Data
+
+The backend/src/main/resources/db/demo/demo_seed.sql file contains fictional demonstration data for PaySim.
+
+20 successful payment records.
+
+10 declined payment records.
+
+5 refunded payment records.
+
+40 associated audit events.
+
+The demo seed script can be executed separately against PostgreSQL. It is not part of the Flyway schema migration sequence.
 ```
 
 ## Documentation
