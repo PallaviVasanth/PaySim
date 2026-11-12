@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.data.jpa.domain.Specification;
 
 @Service
 public class PaymentService {
@@ -134,6 +135,47 @@ public class PaymentService {
         var trail = audits.findByPayment_IdOrderByCreatedAtAscIdAsc(id).stream()
                 .map(AuditEventResponse::from).toList();
         return new PaymentDetailResponse(PaymentResponse.from(payment), trail);
+    }
+
+        /** Retrieves a payment detail only when it is explicitly marked as demo. */
+    @Transactional(readOnly = true)
+    public PaymentDetailResponse getDemoDetail(UUID id) {
+        Payment payment = payments.findByIdAndDemoTrue(id)
+                .orElseThrow(() -> new PaymentNotFoundException(id));
+
+        var trail = audits.findByPayment_IdOrderByCreatedAtAscIdAsc(id).stream()
+                .map(AuditEventResponse::from).toList();
+
+        return new PaymentDetailResponse(PaymentResponse.from(payment), trail);
+    }
+
+    /** Searches only demo payments using the existing filters and pagination. */
+    @Transactional(readOnly = true)
+    public Page<Payment> searchDemo(String query, PaymentStatus status, String currency,
+                                   int page, int size, String sort, String direction) {
+        Specification<Payment> specification = PaymentSpecifications.matching(query, status, currency)
+                .and(PaymentSpecifications.demoOnly());
+
+        String property = SORTABLE.get(sort);
+        if (property == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_SORT",
+                    "Sort must be one of: " + String.join(", ", new java.util.TreeSet<>(SORTABLE.keySet())) + ".");
+        }
+
+        Sort.Direction dir;
+        if ("asc".equalsIgnoreCase(direction)) {
+            dir = Sort.Direction.ASC;
+        } else if ("desc".equalsIgnoreCase(direction)) {
+            dir = Sort.Direction.DESC;
+        } else {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_SORT", "Direction must be 'asc' or 'desc'.");
+        }
+
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        Sort ordering = Sort.by(dir, property).and(Sort.by(Sort.Direction.DESC, "id"));
+
+        return payments.findAll(specification, PageRequest.of(safePage, safeSize, ordering));
     }
 
     @Transactional(readOnly = true)

@@ -67,7 +67,8 @@ INSERT INTO payments (
     decline_reason,
     created_at,
     updated_at,
-    refunded_at
+    refunded_at,
+    is_demo
 )
 SELECT
     id,
@@ -83,17 +84,19 @@ SELECT
     CASE
         WHEN status = 'REFUNDED'
             THEN created_at + interval '1 hour'
-        ELSE created_at
-    END,
-
-    CASE
-        WHEN status = 'REFUNDED'
-            THEN created_at + interval '1 hour'
         ELSE NULL
-    END
+    END,
+    TRUE
 
 FROM demo_rows
 ON CONFLICT (id) DO NOTHING;
+-- Mark the exact deterministic demo records as public demo data.
+UPDATE payments
+SET is_demo = TRUE
+WHERE id IN (
+    SELECT md5('paysim-demo-payment-' || n)::uuid
+    FROM generate_series(1, 35) AS n
+);
 
 
 -- ------------------------------------------------------------

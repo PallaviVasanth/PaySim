@@ -62,6 +62,9 @@ public class Payment {
     @Version
     private long version;
 
+    @Column(name = "is_demo", nullable = false)
+    private boolean demo;
+
     protected Payment() {
         // required by JPA
     }
@@ -112,4 +115,5 @@ public class Payment {
     public Instant getUpdatedAt() { return updatedAt; }
     public Instant getRefundedAt() { return refundedAt; }
     public long getVersion() { return version; }
+    public boolean isDemo() { return demo; }
 }

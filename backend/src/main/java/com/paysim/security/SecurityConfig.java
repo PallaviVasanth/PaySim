@@ -47,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/demo/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/payments", "/api/v1/payments/*/refund").hasRole("OPERATOR")
                         .requestMatchers("/api/**").hasAnyRole("OPERATOR", "VIEWER")
                         .anyRequest().denyAll())

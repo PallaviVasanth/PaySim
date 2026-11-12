@@ -36,6 +36,11 @@ final class PaymentSpecifications {
         };
     }
 
+    /** Restricts public queries to explicitly marked demo payments. */
+    static Specification<Payment> demoOnly() {
+        return (root, cq, cb) -> cb.isTrue(root.get("demo"));
+    }
+
     private static String escapeLike(String s) {
         return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }

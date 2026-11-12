@@ -40,4 +40,30 @@ public class DashboardService {
                 counts,
                 audits.findRecent(PageRequest.of(0, RECENT_ACTIVITY_LIMIT)));
     }
+
+
+    /** Dashboard metrics restricted to public demo payments and their audit activity. */
+    @Transactional(readOnly = true)
+    public DashboardSummary demoSummary() {
+        Map<PaymentStatus, Long> counts = new EnumMap<>(PaymentStatus.class);
+
+        for (PaymentStatus s : PaymentStatus.values()) {
+            counts.put(s, 0L);
+        }
+
+        payments.countGroupedByStatusForDemo()
+                .forEach(row -> counts.put(row.getStatus(), row.getTotal()));
+
+        long total = counts.values().stream()
+                .mapToLong(Long::longValue)
+                .sum();
+
+        return new DashboardSummary(
+                total,
+                counts.get(PaymentStatus.SUCCEEDED),
+                counts.get(PaymentStatus.DECLINED),
+                counts.get(PaymentStatus.REFUNDED),
+                counts,
+                audits.findRecentDemo(PageRequest.of(0, RECENT_ACTIVITY_LIMIT)));
+    }
 }

@@ -1,3 +1,4 @@
+
 package com.paysim.audit;
 
 import java.util.List;
@@ -17,4 +18,14 @@ public interface AuditEventRepository extends JpaRepository<PaymentAuditEvent, L
             order by e.createdAt desc, e.id desc
             """)
     List<RecentActivity> findRecent(Pageable pageable);
+
+    /** Retrieves recent activity associated only with demo payments. */
+    @Query("""
+            select new com.paysim.audit.RecentActivity(
+                e.eventType, p.id, p.orderReference, e.previousStatus, e.newStatus, e.message, e.createdAt)
+            from PaymentAuditEvent e join e.payment p
+            where p.demo = true
+            order by e.createdAt desc, e.id desc
+            """)
+    List<RecentActivity> findRecentDemo(Pageable pageable);
 }

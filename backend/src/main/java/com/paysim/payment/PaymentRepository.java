@@ -1,3 +1,4 @@
+
 package com.paysim.payment;
 
 import jakarta.persistence.LockModeType;
@@ -19,6 +20,13 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID>, JpaSpec
 
     @Query("select p.status as status, count(p) as total from Payment p group by p.status")
     List<StatusCount> countGroupedByStatus();
+
+    /** Counts only payments explicitly marked as demo. */
+    @Query("select p.status as status, count(p) as total from Payment p where p.demo = true group by p.status")
+    List<StatusCount> countGroupedByStatusForDemo();
+
+    /** Retrieves a demo payment by ID without exposing operator payments. */
+    Optional<Payment> findByIdAndDemoTrue(UUID id);
 
     interface StatusCount {
         PaymentStatus getStatus();
